@@ -1,0 +1,4 @@
+- [ ] zakup kamery
+- [ ] test bibliotek
+- [ ] tkinter - wczytanie jpg
+- [ ] wybór szyfrowania do własnej biblioteki
