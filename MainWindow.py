@@ -26,7 +26,7 @@ class TkWindow(tkinter.Tk):
         labelFileName.grid(column=1,row=1,columnspan=2,sticky='EW',padx=10,pady=10)
 
         self.canvas = Canvas(self)
-        self.canvas.grid(row = 2,column = 0)
+        self.canvas.grid(row = 2,column = 0,columnspan=3,sticky='EW',padx=10,pady=10)
         #self.photo = ImageTk.PhotoImage(file = "/home/paulina/obrazki/obrazek.jpg")
         #self.canvas.create_image(0,0, image = self.photo)
 
@@ -35,7 +35,21 @@ class TkWindow(tkinter.Tk):
         self.labelVariable.set(self.fileName)
 
         self.photo = Image.open(self.fileName)
-        self.photo = self.photo.resize((200, 200), Image.ANTIALIAS)
+        (imageSizeWidth, imageSizeHeight) = self.photo.size
+        print(imageSizeWidth, imageSizeHeight)
+
+        newImageSizeHeight = 400
+        n = imageSizeHeight/newImageSizeHeight
+        print(n)
+        newImageSizeWidth = int(imageSizeWidth/n)
+        print(newImageSizeWidth, newImageSizeHeight)
+        #if same:
+        #    newImageSizeHeight = int(imageSizeHeight*n)
+        #else:
+        #    newImageSizeHeight = int(imageSizeHeight/n)
+
+
+        self.photo = self.photo.resize((newImageSizeWidth, newImageSizeHeight), Image.ANTIALIAS)
         self.photo = ImageTk.PhotoImage(self.photo)
         self.canvas.create_image(0,0, image = self.photo)
 
