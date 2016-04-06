@@ -3,7 +3,7 @@
 import os
 import tkinter
 from tkinter import filedialog, Canvas
-from PIL import ImageTk
+from PIL import ImageTk, Image
 
 
 class TkWindow(tkinter.Tk):
@@ -34,7 +34,9 @@ class TkWindow(tkinter.Tk):
         self.fileName = filedialog.askopenfilename(initialdir = "/home/paulina/obrazki",title = "choose your file",filetypes = (("jpeg files","*.jpg"),("all files","*.*")))
         self.labelVariable.set(self.fileName)
 
-        self.photo = ImageTk.PhotoImage(file = self.fileName)
+        self.photo = Image.open(self.fileName)
+        self.photo = self.photo.resize((200, 200), Image.ANTIALIAS)
+        self.photo = ImageTk.PhotoImage(self.photo)
         self.canvas.create_image(0,0, image = self.photo)
 
 
