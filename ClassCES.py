@@ -42,14 +42,17 @@ class TkWindow(tkinter.Tk):
         labelFileName = tkinter.Label(frameTop, textvariable=self.labelVariable, anchor="w", fg="black", bg="white")
         labelFileName.pack(side=tkinter.LEFT, anchor="nw")
 
-        self.canvas = tkinter.Canvas(frameLeft,width=400, height=400,bd=0,bg="blue")
-        self.canvas.pack(side=tkinter.LEFT,fill=tkinter.BOTH,expand=tkinter.YES)
+        self.canvasOriginal = tkinter.Canvas(frameLeft,width=400, height=400,bd=0,bg="blue")
+        self.canvasOriginal.pack(side=tkinter.LEFT,fill=tkinter.BOTH,expand=tkinter.YES)
+
+        self.canvasEncrypted = tkinter.Canvas(frameMiddle,width=400, height=400,bd=0,bg="blue")
+        self.canvasEncrypted.pack(side=tkinter.LEFT,fill=tkinter.BOTH,expand=tkinter.YES)
 
     def getFile(self):
-        self.fileName = filedialog.askopenfilename(initialdir = "/home/paulina/obrazki",title = "choose your file",filetypes = (("jpeg files","*.jpg"),("all files","*.*")))
-        self.labelVariable.set(self.fileName)
+        fileName = filedialog.askopenfilename(initialdir = "/home/paulina/obrazki",title = "choose your file",filetypes = (("jpeg files","*.jpg"),("all files","*.*")))
+        self.labelVariable.set(fileName)
 
-        self.photo = Image.open(self.fileName)
+        self.photo = Image.open(fileName)
         (imageSizeWidth, imageSizeHeight) = self.photo.size
         print(imageSizeWidth, imageSizeHeight)
 
@@ -59,10 +62,10 @@ class TkWindow(tkinter.Tk):
         newImageSizeWidth = int(imageSizeWidth/n)
         print(newImageSizeWidth, newImageSizeHeight)
 
-        self.canvas.config(width=newImageSizeWidth,height=newImageSizeHeight)
+        self.canvasOriginal.config(width=newImageSizeWidth,height=newImageSizeHeight)
         self.photo = self.photo.resize((newImageSizeWidth, newImageSizeHeight), Image.ANTIALIAS)
         self.photo = ImageTk.PhotoImage(self.photo)
-        self.canvas.create_image(int(newImageSizeWidth/2), int(newImageSizeHeight/2), image = self.photo)
+        self.canvasOriginal.create_image(int(newImageSizeWidth/2), int(newImageSizeHeight/2), image = self.photo)
 
 
 
