@@ -32,6 +32,10 @@ class TkWindow(tk.Tk):
         self.bodyOriginal = None
         self.bodyEncrypted = None
         self.bodyDecrypted = None
+        self.tagCounter = 0
+        self.tagStop = "1.0"
+        self.tagColorWarning = "#FF0000"
+        self.tagColorOk = "#00FF00"
 
         self.encryptionOptions = [
             ("Crypto_AES_CBC", "lib: Crypto, enc: AES, mode: CBC"),
@@ -63,16 +67,23 @@ class TkWindow(tk.Tk):
         vscrollbarFrameLogs.config(command = self.textLogs.yview)
 
         # canvas
-        self.canvasOriginal = tk.Canvas(frameOriginal, bd = 0, bg = "#8888FF")
-        self.canvasOriginal.pack(side = tk.LEFT, fill = tk.BOTH, expand = tk.YES)
-        self.canvasEncrypted = tk.Canvas(frameEncrypted, bd = 0, bg = "#88FF88")
+        labelOriginal = tk.Label(frameOriginal, text = "Original picture:")
+        labelOriginal.pack(side = tk.TOP, fill = tk.X, expand = tk.NO)
+        labelEncrypted = tk.Label(frameEncrypted, text = "Encrypted picture:")
+        labelEncrypted.pack(side = tk.TOP, fill = tk.X, expand = tk.NO)
+        labelDecrypted = tk.Label(frameDecrypted, text = "Decrypted picture:")
+        labelDecrypted.pack(side = tk.TOP, fill = tk.X, expand = tk.NO)
+
+        self.canvasOriginal = tk.Canvas(frameOriginal, bd = 0)
+        self.canvasOriginal.pack(side = tk.TOP, fill = tk.BOTH, expand = tk.YES)
+        self.canvasEncrypted = tk.Canvas(frameEncrypted, bd = 0)
         self.canvasEncrypted.pack(side = tk.LEFT, fill = tk.BOTH, expand = tk.YES)
-        self.canvasDecrypted = tk.Canvas(frameDecrypted, bd = 0, bg = "#FF8888")
+        self.canvasDecrypted = tk.Canvas(frameDecrypted, bd = 0)
         self.canvasDecrypted.pack(side = tk.LEFT, fill = tk.BOTH, expand = tk.YES)
 
-        self.canvasOriginal.bind("<Configure>", self.imagesResize)
-        self.canvasEncrypted.bind("<Configure>", self.imagesResize)
-        self.canvasDecrypted.bind("<Configure>", self.imagesResize)
+        self.canvasOriginal.bind("<Configure>", self.imageResizeOriginal)
+        self.canvasEncrypted.bind("<Configure>", self.imageResizeEncrypted)
+        self.canvasDecrypted.bind("<Configure>", self.imageResizeDecrypted)
 
         # button - image
         buttonImageOriginal = tk.Button(frameControls, text = "Get image file", command = self.getFile)
@@ -97,11 +108,19 @@ class TkWindow(tk.Tk):
     def radiobuttonChoose(self):
         self.textLogsInsert("Option chosen: %s" % self.radiobuttonDictVal[self.encryptionChosen.get()].get())
 
-    def textLogsInsert(self, text):
-        self.textLogs.configure(state="normal")
-        self.textLogs.insert("end","%s\n"%text)
-        self.textLogs.configure(state="disabled")
+    def textLogsInsert(self, text, color = "#000000"):
+        self.textLogs.configure(state = "normal")
+
+        self.tagStart = self.tagStop
+        self.textLogs.insert("end", "%s\n" % text)
+        self.tagStop = self.textLogs.index("end-1c")
+
+        self.textLogs.configure(state = "disabled")
         self.textLogs.see("end")
+
+        self.textLogs.tag_add(str(self.tagCounter), self.tagStart, self.tagStop)
+        self.textLogs.tag_config(str(self.tagCounter), foreground = color)
+        self.tagCounter = self.tagCounter + 1
 
     def pathLeaf(self,path):
         leaves = path.strip("/").strip("\\").split("/")[-1].split("\\")[-1].split(".")
@@ -116,12 +135,6 @@ class TkWindow(tk.Tk):
     def displayImageOriginal(self):
         imageOriginal = Image.open(self.fileNameOriginal)
         (self.imageName, extension) = self.pathLeaf(self.fileNameOriginal)
-        # k = 0
-        # imageName = self.imageName
-        # while(os.path.isfile("%s%s.ppm" % (self.directoryOriginal, imageName))):
-        #     imageName = "%s(%d)" % (self.imageName , k)
-        #     k = k + 1
-        # self.imageName = imageName
         self.imageName = self.returnName(self.directoryOriginal, self.imageName)
         imageOriginal.save("%s%s.ppm" % (self.directoryOriginal, self.imageName))
         self.textLogsInsert("Converted and saved as: %s%s.ppm" % (self.directoryOriginal, self.imageName))
@@ -130,7 +143,7 @@ class TkWindow(tk.Tk):
 
         (self.header, self.bodyOriginal) = self.splitImageFile("%s%s.ppm" % (self.directoryOriginal, self.imageName))
 
-        self.textLogsInsert("Image ready for encryption.")
+        self.textLogsInsert("Image ready for encryption.", self.tagColorOk)
 
     def returnName(self, dir, nameRef):
         name = nameRef
@@ -141,11 +154,13 @@ class TkWindow(tk.Tk):
         return name
 
 
-    def imagesResize(self, event):
+    def imageResizeOriginal(self, event):
         if bool(self.imageOriginal):
             self.imageTkResizedOriginal = self.imageResize(self.imageOriginal, self.canvasOriginal)
+    def imageResizeEncrypted(self, event):
         if bool(self.imageEncrypted):
             self.imageTkResizedEncrypted = self.imageResize(self.imageEncrypted, self.canvasEncrypted)
+    def imageResizeDecrypted(self, event):
         if bool(self.imageDecrypted):
             self.imageTkResizedDecrypted = self.imageResize(self.imageDecrypted, self.canvasDecrypted)
 
@@ -189,7 +204,7 @@ class TkWindow(tk.Tk):
                 self.textLogsInsert("Starting encryption...")
                 if self.encryptionChosen.get() == "Crypto_AES_CBC":
                     start = time.time()
-                    self.bodyEncrypted = CryptoLibraries.cryptoEncrypt(self.bodyOriginal, self.key)
+                    self.bodyEncrypted = CryptoLibraries.crypto_AES_CBC_Encrypt(self.bodyOriginal, self.key)
                     stop = time.time()
 
                 self.imageNameEncrypted = self.returnName(self.directoryEncrypted , "%s_enc_%s" % (self.imageName, self.encryptionChosen.get()))
@@ -198,13 +213,13 @@ class TkWindow(tk.Tk):
                 self.imageEncrypted = Image.open("%s%s.ppm" % (self.directoryEncrypted, self.imageNameEncrypted))
                 self.imageTkResizedEncrypted = self.imageResize(self.imageEncrypted, self.canvasEncrypted)
 
-                self.textLogsInsert("Encryption finished :)")
+                self.textLogsInsert("Encryption finished :)", self.tagColorOk)
                 self.textLogsInsert("Lasted %s sec" % (stop - start))
                 self.textLogsInsert("Output saved as: %s%s.ppm" % (self.directoryEncrypted, self.imageNameEncrypted))
             else:
-                self.textLogsInsert("Choose option")
+                self.textLogsInsert("Choose option", self.tagColorWarning)
         else:
-            self.textLogsInsert("Got nothing to encrypt :(")
+            self.textLogsInsert("Got nothing to encrypt :(", self.tagColorWarning)
 
     def decrypt(self):
         if bool(self.bodyEncrypted):
@@ -212,7 +227,7 @@ class TkWindow(tk.Tk):
                 self.textLogsInsert("Starting decryption...")
                 if self.encryptionChosen.get() == "Crypto_AES_CBC":
                     start = time.time()
-                    bodyDecrypted = CryptoLibraries.cryptoDecrypt(self.bodyEncrypted, self.key)
+                    bodyDecrypted = CryptoLibraries.crypto_AES_CBC_Decrypt(self.bodyEncrypted, self.key)
                     stop = time.time()
 
                 imageNameDecrypted = self.returnName(self.directoryDecrypted, "%s_dec_%s" % (self.imageNameEncrypted, self.encryptionChosen.get()))
@@ -221,13 +236,13 @@ class TkWindow(tk.Tk):
                 self.imageDecrypted = Image.open("%s%s.ppm" % (self.directoryDecrypted, imageNameDecrypted))
                 self.imageTkResizedDecrypted = self.imageResize(self.imageDecrypted, self.canvasDecrypted)
 
-                self.textLogsInsert("Decryption finished :)")
+                self.textLogsInsert("Decryption finished :)", self.tagColorOk)
                 self.textLogsInsert("Lasted %s sec" % (stop - start))
                 self.textLogsInsert("Output saved as: %s%s.ppm" % (self.directoryDecrypted, imageNameDecrypted))
             else:
-                self.textLogsInsert("Choose option")
+                self.textLogsInsert("Choose option", self.tagColorWarning)
         else:
-            self.textLogsInsert("Got nothing to decrypt :(")
+            self.textLogsInsert("Got nothing to decrypt :(", self.tagColorWarning)
 
     def saveImage(self, body, name):
         with open(name, 'wb') as fo:

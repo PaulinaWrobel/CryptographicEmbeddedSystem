@@ -6,16 +6,14 @@ from Crypto.Cipher import AES
 
 #https://www.dlitz.net/software/pycrypto/api/2.6/Crypto.Cipher.AES-module.html
 
-def cryptoEncrypt(input, key):
-    #print("Length before: %s" % len(input))
+def crypto_AES_CBC_Encrypt(input, key):
     input = input + b"\0" * (AES.block_size - len(input) % AES.block_size)
-    #print("Length after: %s" % len(input))
     iv = os.urandom(AES.block_size)
     cipher = AES.new(key, AES.MODE_CBC, iv)
     output = iv + cipher.encrypt(input)
     return output
 
-def cryptoDecrypt(input, key):
+def crypto_AES_CBC_Decrypt(input, key):
     iv = input[:AES.block_size]
     cipher = AES.new(key, AES.MODE_CBC, iv)
     plaintext = cipher.decrypt(input[AES.block_size:])
