@@ -13,6 +13,7 @@ class TkWindow(tk.Tk):
         self.parent = parent
         #self.key = os.urandom(32)
         self.key = b"G\x82=\xd7\xdf\xc1\\\xd3\xd8\x85\x86\x19\x9a5\x90\x98u%w\xfa\xbe\x1dI\xddL\x01G\x9c\xbd\x8e\x8d\xd4"
+        self.key2 = b"\x0et\xf1\xfc\xf8'\xd5$M\xb2u\xb0\xc2\x87\xc1\xa4"
 
         self.initializeVariables()
         self.initializeTkElements()
@@ -43,7 +44,11 @@ class TkWindow(tk.Tk):
         mode = "mode"
         self.encryptionOptions = [
             ("Crypto_AES_CBC", "%s: Crypto, %s: AES, %s: CBC" % (lib, enc, mode)),
-            ("Crypto_AES_ECB", "%s: Crypto, %s: AES, %s: ECB" % (lib, enc, mode))
+            ("Crypto_AES_ECB", "%s: Crypto, %s: AES, %s: ECB" % (lib, enc, mode)),
+            ("Crypto_AES_CFB", "%s: Crypto, %s: AES, %s: CFB" % (lib, enc, mode)),
+            ("Crypto_AES_OFB", "%s: Crypto, %s: AES, %s: OFB" % (lib, enc, mode)),
+            ("Crypto_AES_CTR", "%s: Crypto, %s: AES, %s: CTR" % (lib, enc, mode)), # doesn't work
+            ("Crypto_AES_OPENPGP", "%s: Crypto, %s: AES, %s: OPENPGP" % (lib, enc, mode)) # doesn't work
             ]
         self.encryptionChosen = tk.StringVar()
 
@@ -92,6 +97,8 @@ class TkWindow(tk.Tk):
         # radiobuttons - options
         labelRadiobuttons = tk.Label(frameControls, text = "Algorithms:")
         labelRadiobuttons.pack(side = tk.TOP, fill = tk.X, expand = tk.NO, padx = 10, pady = 10)
+        # labelRadiobuttons = tk.Label(frameControls, text = "Library Crypto, algorithm AES")
+        # labelRadiobuttons.pack(side = tk.TOP, fill = tk.X, expand = tk.NO, padx = 10, pady = 10)
         radiobuttonDict = {}
         self.radiobuttonDictVal = {}
         for (key, value) in self.encryptionOptions:
@@ -242,6 +249,22 @@ class TkWindow(tk.Tk):
                     start = time.time()
                     self.bodyEncrypted = CryptoLibraries.crypto_AES_ECB_Encrypt(self.bodyOriginal, self.key)
                     stop = time.time()
+                elif self.encryptionChosen.get() == "Crypto_AES_CFB":
+                    start = time.time()
+                    self.bodyEncrypted = CryptoLibraries.crypto_AES_CFB_Encrypt(self.bodyOriginal, self.key)
+                    stop = time.time()
+                elif self.encryptionChosen.get() == "Crypto_AES_OFB":
+                    start = time.time()
+                    self.bodyEncrypted = CryptoLibraries.crypto_AES_OFB_Encrypt(self.bodyOriginal, self.key)
+                    stop = time.time()
+                elif self.encryptionChosen.get() == "Crypto_AES_CTR":
+                    start = time.time()
+                    self.bodyEncrypted = CryptoLibraries.crypto_AES_CTR_Encrypt(self.bodyOriginal, self.key)
+                    stop = time.time()
+                elif self.encryptionChosen.get() == "Crypto_AES_OPENPGP":
+                    start = time.time()
+                    self.bodyEncrypted = CryptoLibraries.crypto_AES_OPENPGP_Encrypt(self.bodyOriginal, self.key2)
+                    stop = time.time()
 
                 self.imageNameEncrypted = self.returnName(self.directoryEncrypted , "%s_enc_%s" % (self.imageName, self.encryptionChosen.get()))
                 self.saveImage(self.bodyEncrypted, "%s%s.ppm" % (self.directoryEncrypted, self.imageNameEncrypted))
@@ -268,6 +291,22 @@ class TkWindow(tk.Tk):
                 elif self.encryptionChosen.get() == "Crypto_AES_ECB":
                     start = time.time()
                     bodyDecrypted = CryptoLibraries.crypto_AES_ECB_Decrypt(self.bodyEncrypted, self.key)
+                    stop = time.time()
+                elif self.encryptionChosen.get() == "Crypto_AES_CFB":
+                    start = time.time()
+                    bodyDecrypted = CryptoLibraries.crypto_AES_CFB_Decrypt(self.bodyEncrypted, self.key)
+                    stop = time.time()
+                elif self.encryptionChosen.get() == "Crypto_AES_OFB":
+                    start = time.time()
+                    bodyDecrypted = CryptoLibraries.crypto_AES_OFB_Decrypt(self.bodyEncrypted, self.key)
+                    stop = time.time()
+                elif self.encryptionChosen.get() == "Crypto_AES_CTR":
+                    start = time.time()
+                    bodyDecrypted = CryptoLibraries.crypto_AES_CTR_Decrypt(self.bodyEncrypted, self.key)
+                    stop = time.time()
+                elif self.encryptionChosen.get() == "Crypto_AES_OPENPGP":
+                    start = time.time()
+                    bodyDecrypted = CryptoLibraries.crypto_AES_OPENPGP_Decrypt(self.bodyEncrypted, self.key2)
                     stop = time.time()
 
                 imageNameDecrypted = self.returnName(self.directoryDecrypted, "%s_dec_%s" % (self.imageNameEncrypted, self.encryptionChosen.get()))
