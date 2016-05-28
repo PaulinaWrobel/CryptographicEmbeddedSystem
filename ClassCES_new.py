@@ -18,10 +18,16 @@ class TkWindow(tk.Tk):
         self.initializeVariables()
         self.initializeTkElements()
 
+        with open(self.fileLogs, "w") as fl:
+            fl.write("Cryptographic Embedded System - Log\n")
+
+
     def initializeVariables(self):
+        self.fileLogs = "ces.log"
         self.directoryOriginal = "./original/"
         self.directoryEncrypted = "./encrypted/"
         self.directoryDecrypted = "./decrypted/"
+        self.directoryCamera = "./camera"
         os.makedirs(self.directoryOriginal, exist_ok = True)
         os.makedirs(self.directoryEncrypted, exist_ok = True)
         os.makedirs(self.directoryDecrypted, exist_ok = True)
@@ -44,10 +50,10 @@ class TkWindow(tk.Tk):
         mode = "mode"
         self.encryptionOptions = [
             ("Crypto_AES_CBC", "%s: Crypto, %s: AES, %s: CBC" % (lib, enc, mode)),
-            ("Crypto_AES_ECB", "%s: Crypto, %s: AES, %s: ECB" % (lib, enc, mode)),
+            ("Crypto_AES_ECB", "%s: Crypto, %s: AES, %s: ECB" % (lib, enc, mode)), # not using iv
             ("Crypto_AES_CFB", "%s: Crypto, %s: AES, %s: CFB" % (lib, enc, mode)),
             ("Crypto_AES_OFB", "%s: Crypto, %s: AES, %s: OFB" % (lib, enc, mode)),
-            ("Crypto_AES_CTR", "%s: Crypto, %s: AES, %s: CTR" % (lib, enc, mode)), # doesn't work
+            ("Crypto_AES_CTR", "%s: Crypto, %s: AES, %s: CTR" % (lib, enc, mode)), # not using iv
             ("Crypto_AES_OPENPGP", "%s: Crypto, %s: AES, %s: OPENPGP" % (lib, enc, mode)) # doesn't work
             ]
         self.encryptionChosen = tk.StringVar()
@@ -275,6 +281,10 @@ class TkWindow(tk.Tk):
                 self.textLogsInsert("Lasted %s sec" % (stop - start))
                 self.textLogsInsert("Output saved as: %s%s.ppm" % (self.directoryEncrypted, self.imageNameEncrypted))
                 self.textLogsInsert("Encryption finished :)", self.tagColorOk)
+
+                with open(self.fileLogs, "a") as fl:
+                    fl.write("Encryption: TIME: %s sec, SIZE: %s bytes, MODE: %s\n" %
+                    ((stop - start), len(self.bodyOriginal),self.radiobuttonDictVal[self.encryptionChosen.get()].get()))
             else:
                 self.textLogsInsert("Choose option", self.tagColorWarning)
         else:
@@ -318,13 +328,17 @@ class TkWindow(tk.Tk):
                 self.textLogsInsert("Lasted %s sec" % (stop - start))
                 self.textLogsInsert("Output saved as: %s%s.ppm" % (self.directoryDecrypted, imageNameDecrypted))
                 self.textLogsInsert("Decryption finished :)", self.tagColorOk)
+
+                with open(self.fileLogs, "a") as fl:
+                    fl.write("Decryption: TIME: %s sec, SIZE: %s bytes, MODE: %s\n" %
+                    ((stop - start), len(self.bodyEncrypted),self.radiobuttonDictVal[self.encryptionChosen.get()].get()))
             else:
                 self.textLogsInsert("Choose option", self.tagColorWarning)
         else:
             self.textLogsInsert("Got nothing to decrypt :(", self.tagColorWarning)
 
     def saveImage(self, body, name):
-        with open(name, 'wb') as fo:
+        with open(name, "wb") as fo:
             fo.write(self.header + body)
 
     def getImageFromCamera(self):

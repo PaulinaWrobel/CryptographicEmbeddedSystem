@@ -25,15 +25,19 @@ def crypto_AES_CBC_Decrypt(input, key):
 
 def crypto_AES_ECB_Encrypt(input, key):
     input = input + b"\0" * (AES.block_size - len(input) % AES.block_size)
-    iv = os.urandom(AES.block_size)
-    cipher = AES.new(key, AES.MODE_ECB, iv)
-    output = iv + cipher.encrypt(input)
+    #iv = os.urandom(AES.block_size)
+    #cipher = AES.new(key, AES.MODE_ECB, iv)
+    cipher = AES.new(key, AES.MODE_ECB)
+    #output = iv + cipher.encrypt(input)
+    output = cipher.encrypt(input)
     return output
 
 def crypto_AES_ECB_Decrypt(input, key):
-    iv = input[:AES.block_size]
-    cipher = AES.new(key, AES.MODE_ECB, iv)
-    plaintext = cipher.decrypt(input[AES.block_size:])
+    #iv = input[:AES.block_size]
+    #cipher = AES.new(key, AES.MODE_ECB, iv)
+    cipher = AES.new(key, AES.MODE_ECB)
+    #plaintext = cipher.decrypt(input[AES.block_size:])
+    plaintext = cipher.decrypt(input)
     output = plaintext.rstrip(b"\0")
     return output
 
