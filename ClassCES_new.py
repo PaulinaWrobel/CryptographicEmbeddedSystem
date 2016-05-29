@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import filedialog
 from PIL import ImageTk, Image, ImageFilter
 import CryptoLibraries
+import AES
 import time
 
 class TkWindow(tk.Tk):
@@ -14,6 +15,8 @@ class TkWindow(tk.Tk):
         #self.key = os.urandom(32)
         self.key = b"G\x82=\xd7\xdf\xc1\\\xd3\xd8\x85\x86\x19\x9a5\x90\x98u%w\xfa\xbe\x1dI\xddL\x01G\x9c\xbd\x8e\x8d\xd4"
         self.key2 = b"\x0et\xf1\xfc\xf8'\xd5$M\xb2u\xb0\xc2\x87\xc1\xa4"
+        self.key128 = b"\xf8\xcd<@\xd0+w-\xde\x9bq/-_P\x12\x01\xcf\xe4\xd3\x8e\x01\xcc\x07\x1bD\xa6\x85\xa0\x97q\x13\x96\x8e\xc1}\xeb\x1f\x87\x14\x05\xc0M\x95t\xc6&\x12Q\x0c\x91\x98\x8cn\x0bV&\x1a\x7f#\xf5e\x18^\x96$z\xa0\x8f\xfc\xeb\xfes\xcf\xb7s\x8d\xf0\xb5\xc9r\xdc`\xcfjPg_\xc5\xa9\xd1It\x0f\nR\xa1\xf6!K+\xaf\xac\xdc\xae\xf1\x1cs\xa61f\x01\xf7\xeew\x93\xe69\x96\x8b\xd6\xb8Y\x1c\xf0h\x9e?"
+        #print(os.urandom(128))
 
         self.initializeVariables()
         self.initializeTkElements()
@@ -27,7 +30,7 @@ class TkWindow(tk.Tk):
         self.directoryOriginal = "./original/"
         self.directoryEncrypted = "./encrypted/"
         self.directoryDecrypted = "./decrypted/"
-        self.directoryCamera = "./camera"
+        self.directoryCamera = "./camera/"
         os.makedirs(self.directoryOriginal, exist_ok = True)
         os.makedirs(self.directoryEncrypted, exist_ok = True)
         os.makedirs(self.directoryDecrypted, exist_ok = True)
@@ -54,7 +57,8 @@ class TkWindow(tk.Tk):
             ("Crypto_AES_CFB", "%s: Crypto, %s: AES, %s: CFB" % (lib, enc, mode)),
             ("Crypto_AES_OFB", "%s: Crypto, %s: AES, %s: OFB" % (lib, enc, mode)),
             ("Crypto_AES_CTR", "%s: Crypto, %s: AES, %s: CTR" % (lib, enc, mode)), # not using iv
-            ("Crypto_AES_OPENPGP", "%s: Crypto, %s: AES, %s: OPENPGP" % (lib, enc, mode)) # doesn't work
+            ("Crypto_AES_OPENPGP", "%s: Crypto, %s: AES, %s: OPENPGP" % (lib, enc, mode)), # doesn't work
+            ("Our_AES_CBC", "%s: Our, %s: AES, %s: CBC" % (lib, enc, mode))
             ]
         self.encryptionChosen = tk.StringVar()
 
@@ -89,11 +93,11 @@ class TkWindow(tk.Tk):
         labelDecrypted = tk.Label(frameDecrypted, text = "Decrypted picture:")
         labelDecrypted.pack(side = tk.TOP, fill = tk.X, expand = tk.NO, padx = 5, pady = 5)
 
-        self.canvasOriginal = tk.Canvas(frameOriginal, bd = 0)
+        self.canvasOriginal = tk.Canvas(frameOriginal, bd = 0, width = 50)
         self.canvasOriginal.pack(side = tk.TOP, fill = tk.BOTH, expand = tk.YES)
-        self.canvasEncrypted = tk.Canvas(frameEncrypted, bd = 0)
+        self.canvasEncrypted = tk.Canvas(frameEncrypted, bd = 0, width = 50)
         self.canvasEncrypted.pack(side = tk.LEFT, fill = tk.BOTH, expand = tk.YES)
-        self.canvasDecrypted = tk.Canvas(frameDecrypted, bd = 0)
+        self.canvasDecrypted = tk.Canvas(frameDecrypted, bd = 0, width = 50)
         self.canvasDecrypted.pack(side = tk.LEFT, fill = tk.BOTH, expand = tk.YES)
 
         self.canvasOriginal.bind("<Configure>", self.imageResizeOriginal)
@@ -271,6 +275,12 @@ class TkWindow(tk.Tk):
                     start = time.time()
                     self.bodyEncrypted = CryptoLibraries.crypto_AES_OPENPGP_Encrypt(self.bodyOriginal, self.key2)
                     stop = time.time()
+                elif self.encryptionChosen.get() == "Our_AES_CBC":
+                    aes = AES.AES()
+                    start = time.time()
+                    self.bodyEncrypted = aes.our_AES_CBC_encrypt(self.key128, self.bodyOriginal)
+                    stop = time.time()
+
 
                 self.imageNameEncrypted = self.returnName(self.directoryEncrypted , "%s_enc_%s" % (self.imageName, self.encryptionChosen.get()))
                 self.saveImage(self.bodyEncrypted, "%s%s.ppm" % (self.directoryEncrypted, self.imageNameEncrypted))
@@ -318,6 +328,13 @@ class TkWindow(tk.Tk):
                     start = time.time()
                     bodyDecrypted = CryptoLibraries.crypto_AES_OPENPGP_Decrypt(self.bodyEncrypted, self.key2)
                     stop = time.time()
+                elif self.encryptionChosen.get() == "Our_AES_CBC":
+                    aes = AES.AES()
+                    start = time.time()
+                    bodyDecrypted = aes.our_AES_CBC_decrypt(self.key128, self.bodyEncrypted)
+                    stop = time.time()
+
+
 
                 imageNameDecrypted = self.returnName(self.directoryDecrypted, "%s_dec_%s" % (self.imageNameEncrypted, self.encryptionChosen.get()))
                 self.saveImage(bodyDecrypted, "%s%s.ppm" % (self.directoryDecrypted, imageNameDecrypted))
@@ -342,7 +359,10 @@ class TkWindow(tk.Tk):
             fo.write(self.header + body)
 
     def getImageFromCamera(self):
-        pass
+        self.fileNameOriginal = Camera.getPhoto(self.directoryCamera)
+        if bool(self.fileNameOriginal):
+            self.textLogsInsert("Opened: %s" % self.fileNameOriginal)
+            self.displayImageOriginal()
 
     def getImageForDecryption(self):
         self.fileNameEncrypted = filedialog.askopenfilename(initialdir = self.directoryEncrypted ,title = "choose your file",filetypes = (("ppm files","*.ppm"),("all files","*.*")))
