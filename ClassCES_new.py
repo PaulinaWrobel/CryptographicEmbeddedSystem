@@ -7,6 +7,7 @@ from PIL import ImageTk, Image, ImageFilter
 import CryptoLibraries
 import AES
 import time
+import Camera
 
 class TkWindow(tk.Tk):
     def __init__(self,parent):
@@ -20,7 +21,8 @@ class TkWindow(tk.Tk):
 
         self.initializeVariables()
         self.initializeTkElements()
-
+        self.Camera = Camera.init()
+        
         with open(self.fileLogs, "w") as fl:
             fl.write("Cryptographic Embedded System - Log\n")
 
@@ -34,6 +36,7 @@ class TkWindow(tk.Tk):
         os.makedirs(self.directoryOriginal, exist_ok = True)
         os.makedirs(self.directoryEncrypted, exist_ok = True)
         os.makedirs(self.directoryDecrypted, exist_ok = True)
+        os.makedirs(self.directoryCamera, exist_ok = True)
         self.imageTkResizedOriginal = None
         self.imageTkResizedEncrypted = None
         self.imageTkResizedDecrypted = None
@@ -57,7 +60,7 @@ class TkWindow(tk.Tk):
             ("Crypto_AES_CFB", "%s: Crypto, %s: AES, %s: CFB" % (lib, enc, mode)),
             ("Crypto_AES_OFB", "%s: Crypto, %s: AES, %s: OFB" % (lib, enc, mode)),
             ("Crypto_AES_CTR", "%s: Crypto, %s: AES, %s: CTR" % (lib, enc, mode)), # not using iv
-            ("Crypto_AES_OPENPGP", "%s: Crypto, %s: AES, %s: OPENPGP" % (lib, enc, mode)), # doesn't work
+            #("Crypto_AES_OPENPGP", "%s: Crypto, %s: AES, %s: OPENPGP" % (lib, enc, mode)), # doesn't work
             ("Our_AES_CBC", "%s: Our, %s: AES, %s: CBC" % (lib, enc, mode))
             ]
         self.encryptionChosen = tk.StringVar()
@@ -359,9 +362,9 @@ class TkWindow(tk.Tk):
             fo.write(self.header + body)
 
     def getImageFromCamera(self):
-        self.fileNameOriginal = Camera.getPhoto(self.directoryCamera)
+        self.fileNameOriginal = Camera.getPhoto(self.Camera, self.directoryCamera)
         if bool(self.fileNameOriginal):
-            self.textLogsInsert("Opened: %s" % self.fileNameOriginal)
+            self.textLogsInsert("Image from camera saved: %s" % self.fileNameOriginal)
             self.displayImageOriginal()
 
     def getImageForDecryption(self):
